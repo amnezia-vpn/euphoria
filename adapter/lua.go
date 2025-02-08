@@ -13,11 +13,11 @@ type Lua struct {
 }
 
 type LuaParams struct {
-	LuaCode64 string
+	Base64LuaCode string
 }
 
 func NewLua(params LuaParams) (*Lua, error) {
-	luaCode, err := base64.StdEncoding.DecodeString(params.LuaCode64)
+	luaCode, err := base64.StdEncoding.DecodeString(params.Base64LuaCode)
 	if err != nil {
 		return nil, err
 	}
@@ -26,7 +26,6 @@ func NewLua(params LuaParams) (*Lua, error) {
 	state := lua.NewState()
 	state.OpenLibs()
 
-	// Load and execute the Lua code
 	if err := state.DoString(string(luaCode)); err != nil {
 		return nil, fmt.Errorf("Error loading Lua code: %v\n", err)
 	}
@@ -38,10 +37,8 @@ func (l *Lua) Close() {
 }
 
 func (l *Lua) Generate(data []byte, counter int64) ([]byte, error) {
-	// Push the function onto the stack
-	l.state.GetGlobal("D_gen")
+	l.state.GetGlobal("d_gen")
 
-	// Push the argument
 	l.state.PushBytes(data)
 	l.state.PushInteger(counter)
 
@@ -52,15 +49,12 @@ func (l *Lua) Generate(data []byte, counter int64) ([]byte, error) {
 	result := l.state.ToBytes(-1)
 	l.state.Pop(1)
 
-	fmt.Printf("Result: %s\n", string(result))
 	return result, nil
 }
 
 func (l *Lua) Parse(data []byte) ([]byte, error) {
-	// Push the function onto the stack
-	l.state.GetGlobal("D_parse")
+	l.state.GetGlobal("d_parse")
 
-	// Push the argument
 	l.state.PushBytes(data)
 	if err := l.state.Call(1, 1); err != nil {
 		return nil, fmt.Errorf("Error calling Lua function: %v\n", err)
@@ -69,6 +63,5 @@ func (l *Lua) Parse(data []byte) ([]byte, error) {
 	result := l.state.ToBytes(-1)
 	l.state.Pop(1)
 
-	fmt.Printf("Result: %s\n", string(result))
 	return result, nil
 }

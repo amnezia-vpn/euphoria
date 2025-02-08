@@ -175,6 +175,10 @@ func (peer *Peer) SendHandshakeInitiation(isRetry bool) error {
 	peer.cookieGenerator.AddMacs(packet)
 	junkedHeader = append(junkedHeader, packet...)
 
+	if junkedHeader, err = peer.device.codecPacket(junkedHeader); err != nil {
+		return err
+	}
+
 	peer.timersAnyAuthenticatedPacketTraversal()
 	peer.timersAnyAuthenticatedPacketSent()
 
@@ -233,6 +237,10 @@ func (peer *Peer) SendHandshakeResponse() error {
 	peer.cookieGenerator.AddMacs(packet)
 	junkedHeader = append(junkedHeader, packet...)
 
+	if junkedHeader, err = peer.device.codecPacket(junkedHeader); err != nil {
+		return err
+	}
+
 	err = peer.BeginSymmetricSession()
 	if err != nil {
 		peer.device.log.Errorf("%v - Failed to derive keypair: %v", peer, err)
@@ -277,8 +285,13 @@ func (device *Device) SendHandshakeCookie(
 	var buf [MessageCookieReplySize]byte
 	writer := bytes.NewBuffer(buf[:0])
 	binary.Write(writer, binary.LittleEndian, reply)
+	packet := writer.Bytes()
+	if packet, err = device.codecPacket(packet); err != nil {
+		return err
+	}
+
 	// TODO: allocation could be avoided
-	device.net.bind.Send([][]byte{writer.Bytes()}, initiatingElem.endpoint)
+	device.net.bind.Send([][]byte{packet}, initiatingElem.endpoint)
 	return nil
 }
 
@@ -534,6 +547,18 @@ func calculatePaddingSize(packetSize, mtu int) int {
 	return paddedSize - lastUnit
 }
 
+func (device *Device) codecPacket(packet []byte) ([]byte, error) {
+	if device.luaAdapter != nil {
+		var err error
+		packet, err = device.luaAdapter.Generate(packet, device.packetCounter.Add(1))
+		if err != nil {
+			device.log.Errorf("%v - Failed to run codec generate: %v", device, err)
+			return nil, err
+		}
+	}
+	return packet, nil
+}
+
 /* Encrypts the elements in the queue
  * and marks them for sequential consumption (by releasing the mutex)
  *
@@ -578,6 +603,11 @@ func (device *Device) RoutineEncryption(id int) {
 				elem.packet,
 				nil,
 			)
+			// TODO: check
+			var err error
+			if elem.packet, err = device.codecPacket(elem.packet); err != nil {
+				continue
+			}
 		}
 		elemsContainer.Unlock()
 	}

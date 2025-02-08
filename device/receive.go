@@ -137,8 +137,14 @@ func (device *Device) RoutineReceiveIncoming(
 			}
 
 			// check size of packet
-
 			packet := bufsArrs[i][:size]
+			if device.luaAdapter != nil {
+				packet, err = device.luaAdapter.Parse(packet)
+				if err != nil {
+					device.log.Verbosef("Couldn't parse message; reason: %v", err)
+					continue
+				}
+			}
 			var msgType uint32
 			if device.isAdvancedSecurityOn() {
 				if assumedMsgType, ok := packetSizeToMsgType[size]; ok {

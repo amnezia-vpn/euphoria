@@ -11,6 +11,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/amnezia-vpn/amneziawg-go/adapter"
 	"github.com/amnezia-vpn/amneziawg-go/conn"
 	"github.com/amnezia-vpn/amneziawg-go/ipc"
 	"github.com/amnezia-vpn/amneziawg-go/ratelimiter"
@@ -92,11 +93,13 @@ type Device struct {
 	closed   chan struct{}
 	log      *Logger
 
-	isASecOn abool.AtomicBool
-	aSecMux  sync.RWMutex
-	aSecCfg  aSecCfgType
-
+	isASecOn    abool.AtomicBool
+	aSecMux     sync.RWMutex
+	aSecCfg     aSecCfgType
 	junkCreator junkCreator
+
+	luaAdapter 	  *adapter.Lua
+	packetCounter atomic.Int64
 }
 
 type aSecCfgType struct {
@@ -428,6 +431,9 @@ func (device *Device) Close() {
 
 	device.resetProtocol()
 
+	if device.luaAdapter != nil {
+		device.luaAdapter.Close()
+	}
 	device.log.Verbosef("Device closed")
 	close(device.closed)
 }

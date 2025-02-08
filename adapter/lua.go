@@ -1,4 +1,4 @@
-package main
+package adapter
 
 import (
 	"encoding/base64"
@@ -7,39 +7,68 @@ import (
 	"github.com/aarzilli/golua/lua"
 )
 
-func main() {
-	// luaB64 := `bG9jYWwgZnVuY3Rpb24gZF9nZW4oZGF0YSwgY291bnRlcikKCUhlYWRlciA9IHN0cmluZy5jaGFyKDB4MTIsIDB4MzQsIDB4NTYsIDB4NzgpCgktLSBsb2NhbCB0cyA9IG9zLnRpbWUoKQoJcmV0dXJuIEhlYWRlciAuLiBkYXRhCmVuZAoKbG9jYWwgZnVuY3Rpb24gZF9wYXJzZShkYXRhKQoJcmV0dXJuIHN0cmluZy5zdWIoZGF0YSwgI0hlYWRlcikKZW5kCg==`
-	// only d_gen
-	// luaB64 := `ZnVuY3Rpb24gRF9nZW4oZGF0YSkKCS0tIEhlYWRlciA9IHN0cmluZy5jaGFyKDB4MTIsIDB4MzQsIDB4NTYsIDB4NzgpCglsb2NhbCBIZWFkZXIgPSAiXHgxMlx4MzRceDU2XHg3OCIKCS0tIGxvY2FsIHRzID0gb3MudGltZSgpCglyZXR1cm4gSGVhZGVyIC4uIGRhdGEKZW5kCg==`
-	luaB64 := `ZnVuY3Rpb24gRF9nZW4oZGF0YSkKCS0tIEhlYWRlciA9IHN0cmluZy5jaGFyKDB4MTIsIDB4MzQsIDB4NTYsIDB4NzgpCglsb2NhbCBIZWFkZXIgPSAiXHgxMlx4MzRceDU2XHg3OCIKCWxvY2FsIHRzID0gb3MudGltZSgpCglyZXR1cm4gSGVhZGVyIC4uIGRhdGEKZW5kCg==`
-	sDec, _ := base64.StdEncoding.DecodeString(luaB64)
-	fmt.Println(string(sDec))
-	luaCode := sDec
-	L := lua.NewState()
-	L.OpenLibs()
-	defer L.Close()
+// TODO: aSec sync is enough?
+type Lua struct {
+	state *lua.State
+}
+
+type LuaParams struct {
+	LuaCode64 string
+}
+
+func NewLua(params LuaParams) (*Lua, error) {
+	luaCode, err := base64.StdEncoding.DecodeString(params.LuaCode64)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println(string(luaCode))
+
+	state := lua.NewState()
+	state.OpenLibs()
 
 	// Load and execute the Lua code
-	if err := L.DoString(string(luaCode)); err != nil {
-		fmt.Printf("Error loading Lua code: %v\n", err)
-		return
+	if err := state.DoString(string(luaCode)); err != nil {
+		return nil, fmt.Errorf("Error loading Lua code: %v\n", err)
 	}
+	return &Lua{state: state}, nil
+}
 
+func (l *Lua) Close() {
+	l.state.Close()
+}
+
+func (l *Lua) Generate(data []byte, counter int64) ([]byte, error) {
 	// Push the function onto the stack
-	L.GetGlobal("D_gen")
+	l.state.GetGlobal("D_gen")
 
 	// Push the argument
-	L.PushString("data")
+	l.state.PushBytes(data)
+	l.state.PushInteger(counter)
 
-	if err := L.Call(1, 1); err != nil {
-		fmt.Printf("Error calling Lua function: %v\n", err)
-		return
+	if err := l.state.Call(2, 1); err != nil {
+		return nil, fmt.Errorf("Error calling Lua function: %v\n", err)
 	}
 
-	result := L.ToString(-1)
-	L.Pop(1)
+	result := l.state.ToBytes(-1)
+	l.state.Pop(1)
 
-	// Print the result
-	// fmt.Printf("Result: %x\n", []byte(result))
-	fmt.Printf("Result: %s\n", result)
+	fmt.Printf("Result: %s\n", string(result))
+	return result, nil
+}
+
+func (l *Lua) Parse(data []byte) ([]byte, error) {
+	// Push the function onto the stack
+	l.state.GetGlobal("D_parse")
+
+	// Push the argument
+	l.state.PushBytes(data)
+	if err := l.state.Call(1, 1); err != nil {
+		return nil, fmt.Errorf("Error calling Lua function: %v\n", err)
+	}
+
+	result := l.state.ToBytes(-1)
+	l.state.Pop(1)
+
+	fmt.Printf("Result: %s\n", string(result))
+	return result, nil
 }

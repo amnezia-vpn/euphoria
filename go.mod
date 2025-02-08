@@ -12,6 +12,7 @@ require (
 )
 
 require (
+	github.com/aarzilli/golua v0.0.0-20241229084300-cd31ab23902e // indirect
 	github.com/google/btree v1.0.1 // indirect
 	golang.org/x/time v0.0.0-20220210224613-90d013bbcef8 // indirect
 )

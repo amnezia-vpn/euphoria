@@ -3,13 +3,15 @@ package adapter
 import (
 	"encoding/base64"
 	"fmt"
+	"sync/atomic"
 
 	"github.com/aarzilli/golua/lua"
 )
 
 // TODO: aSec sync is enough?
 type Lua struct {
-	state *lua.State
+	state         *lua.State
+	packetCounter atomic.Int64
 }
 
 type LuaParams struct {
@@ -36,12 +38,15 @@ func (l *Lua) Close() {
 	l.state.Close()
 }
 
-func (l *Lua) Generate(msgType int64, data []byte, counter int64) ([]byte, error) {
+func (l *Lua) Generate(
+	msgType int64,
+	data []byte,
+) ([]byte, error) {
 	l.state.GetGlobal("d_gen")
 
 	l.state.PushInteger(msgType)
 	l.state.PushBytes(data)
-	l.state.PushInteger(counter)
+	l.state.PushInteger(l.packetCounter.Add(1))
 
 	if err := l.state.Call(3, 1); err != nil {
 		return nil, fmt.Errorf("Error calling Lua function: %v\n", err)

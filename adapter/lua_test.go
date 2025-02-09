@@ -26,7 +26,7 @@ func TestLua_Generate(t *testing.T) {
 	t.Run("", func(t *testing.T) {
 		l := newLua()
 		defer l.Close()
-		got, err := l.Generate(1, []byte("test"), 10)
+		got, err := l.Generate(1, []byte("test"))
 		if err != nil {
 			t.Errorf(
 				"Lua.Generate() error = %v, wantErr %v",
@@ -36,7 +36,7 @@ func TestLua_Generate(t *testing.T) {
 			return
 		}
 
-		want := "10headertest"
+		want := "1headertest"
 		if string(got) != want {
 			t.Errorf("Lua.Generate() = %v, want %v", string(got), want)
 		}

@@ -12,6 +12,7 @@ import (
 type Lua struct {
 	state         *lua.State
 	packetCounter atomic.Int64
+	base64LuaCode string
 }
 
 type LuaParams struct {
@@ -31,7 +32,7 @@ func NewLua(params LuaParams) (*Lua, error) {
 	if err := state.DoString(string(luaCode)); err != nil {
 		return nil, fmt.Errorf("Error loading Lua code: %v\n", err)
 	}
-	return &Lua{state: state}, nil
+	return &Lua{state: state, base64LuaCode: params.Base64LuaCode}, nil
 }
 
 func (l *Lua) Close() {
@@ -70,4 +71,8 @@ func (l *Lua) Parse(data []byte) ([]byte, error) {
 	l.state.Pop(1)
 
 	return result, nil
+}
+
+func (l *Lua) Base64LuaCode() string {
+	return l.base64LuaCode
 }

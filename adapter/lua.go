@@ -69,7 +69,6 @@ func (l *Lua) Parse(data []byte) ([]byte, error) {
 
 	result := l.state.ToBytes(-1)
 	l.state.Pop(1)
-	// copy(data, result)
 
 	return result, nil
 }

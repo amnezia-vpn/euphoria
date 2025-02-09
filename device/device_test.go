@@ -107,7 +107,7 @@ func genASecurityConfigs(tb testing.TB) (cfgs, endpointCfgs [2]string) {
 		"private_key", hex.EncodeToString(key1[:]),
 		"listen_port", "0",
 		"replace_peers", "true",
-		"lua_codec", "CQkJZnVuY3Rpb24gZF9nZW4obXNnX3R5cGUsIGRhdGEsIGNvdW50ZXIpCgkJCQlyZXR1cm4gZGF0YQoJCQllbmQKCgkJCWZ1bmN0aW9uIGRfcGFyc2UoZGF0YSkKCQkJCXJldHVybiBkYXRhCgkJCWVuZAo=",
+		"lua_codec", "CQkJZnVuY3Rpb24gZF9nZW4obXNnX3R5cGUsIGRhdGEsIGNvdW50ZXIpCgkJCQlsb2NhbCBoZWFkZXIgPSAiaGVhZGVyIgoJCQkJcmV0dXJuIGhlYWRlciAuLiBkYXRhCgkJCWVuZAoKCQkJZnVuY3Rpb24gZF9wYXJzZShkYXRhKQoJCQkJbG9jYWwgaGVhZGVyID0gImhlYWRlciIKCQkJCXJldHVybiBzdHJpbmcuc3ViKGRhdGEsICNoZWFkZXIrMSkKCQkJZW5kCg==",
 		"jc", "5",
 		"jmin", "500",
 		"jmax", "1000",
@@ -130,7 +130,7 @@ func genASecurityConfigs(tb testing.TB) (cfgs, endpointCfgs [2]string) {
 		"private_key", hex.EncodeToString(key2[:]),
 		"listen_port", "0",
 		"replace_peers", "true",
-		"lua_codec", "CQkJZnVuY3Rpb24gZF9nZW4obXNnX3R5cGUsIGRhdGEsIGNvdW50ZXIpCgkJCQlyZXR1cm4gZGF0YQoJCQllbmQKCgkJCWZ1bmN0aW9uIGRfcGFyc2UoZGF0YSkKCQkJCXJldHVybiBkYXRhCgkJCWVuZAo=",
+		"lua_codec", "CQkJZnVuY3Rpb24gZF9nZW4obXNnX3R5cGUsIGRhdGEsIGNvdW50ZXIpCgkJCQlsb2NhbCBoZWFkZXIgPSAiaGVhZGVyIgoJCQkJcmV0dXJuIGhlYWRlciAuLiBkYXRhCgkJCWVuZAoKCQkJZnVuY3Rpb24gZF9wYXJzZShkYXRhKQoJCQkJbG9jYWwgaGVhZGVyID0gImhlYWRlciIKCQkJCXJldHVybiBzdHJpbmcuc3ViKGRhdGEsICNoZWFkZXIrMSkKCQkJZW5kCg==",
 		"jc", "5",
 		"jmin", "500",
 		"jmax", "1000",
@@ -194,7 +194,6 @@ func (pair *testPair) Send(
 	var err error
 	select {
 	case msgRecv := <-p0.tun.Inbound:
-		fmt.Printf("len(%d) msg: %x\nlen(%d) rec: %x\n", len(msg), msg, len(msgRecv), msgRecv)
 		if !bytes.Equal(msg, msgRecv) {
 			err = fmt.Errorf("%s did not transit correctly", ping)
 		}

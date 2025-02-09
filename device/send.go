@@ -9,7 +9,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"net"
 	"os"
 	"sync"
@@ -592,12 +591,10 @@ func (device *Device) RoutineEncryption(id int) {
 				elem.packet,
 				nil,
 			)
-			fmt.Printf("msg: %x\n", elem.packet)
 			var err error
 			if elem.packet, err = device.codecPacket(DefaultMessageTransportType, elem.packet); err != nil {
 				continue
 			}
-			fmt.Printf("msgmsg: %x\n", elem.packet)
 		}
 		elemsContainer.Unlock()
 	}
@@ -652,7 +649,6 @@ func (peer *Peer) RoutineSequentialSender(maxBatchSize int) {
 			peer.timersDataSent()
 		}
 		for _, elem := range elemsContainer.elems {
-			fmt.Printf("send buffer: %.200x\n", elem.buffer)
 			device.PutMessageBuffer(elem.buffer)
 			device.PutOutboundElement(elem)
 		}

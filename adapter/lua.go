@@ -36,13 +36,14 @@ func (l *Lua) Close() {
 	l.state.Close()
 }
 
-func (l *Lua) Generate(data []byte, counter int64) ([]byte, error) {
+func (l *Lua) Generate(msgType int64, data []byte, counter int64) ([]byte, error) {
 	l.state.GetGlobal("d_gen")
 
+	l.state.PushInteger(msgType)
 	l.state.PushBytes(data)
 	l.state.PushInteger(counter)
 
-	if err := l.state.Call(2, 1); err != nil {
+	if err := l.state.Call(3, 1); err != nil {
 		return nil, fmt.Errorf("Error calling Lua function: %v\n", err)
 	}
 

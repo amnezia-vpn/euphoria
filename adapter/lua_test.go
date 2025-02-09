@@ -7,17 +7,17 @@ import (
 func newLua() *Lua {
 	lua, _ := NewLua(LuaParams{
 		/*
-		   function d_gen(data, counter)
-		   	local header = "header"
-		   	return counter .. header .. data
-		   end
+			function d_gen(msg_type, data, counter)
+				local header = "header"
+				return counter .. header .. data
+			end
 
-		   function d_parse(data)
-		   	local header = "10header"
-		   	return string.sub(data, #header+1)
-		   end
+			function d_parse(data)
+				local header = "10header"
+				return string.sub(data, #header+1)
+			end
 		*/
-		Base64LuaCode: "ZnVuY3Rpb24gZF9nZW4oZGF0YSwgY291bnRlcikKCWxvY2FsIGhlYWRlciA9ICJoZWFkZXIiCglyZXR1cm4gY291bnRlciAuLiBoZWFkZXIgLi4gZGF0YQplbmQKCmZ1bmN0aW9uIGRfcGFyc2UoZGF0YSkKCWxvY2FsIGhlYWRlciA9ICIxMGhlYWRlciIKCXJldHVybiBzdHJpbmcuc3ViKGRhdGEsICNoZWFkZXIrMSkKZW5kCg==",
+		Base64LuaCode: "CmZ1bmN0aW9uIGRfZ2VuKG1zZ190eXBlLCBkYXRhLCBjb3VudGVyKQoJbG9jYWwgaGVhZGVyID0gImhlYWRlciIKCXJldHVybiBjb3VudGVyIC4uIGhlYWRlciAuLiBkYXRhCmVuZAoKZnVuY3Rpb24gZF9wYXJzZShkYXRhKQoJbG9jYWwgaGVhZGVyID0gIjEwaGVhZGVyIgoJcmV0dXJuIHN0cmluZy5zdWIoZGF0YSwgI2hlYWRlcisxKQplbmQK",
 	})
 	return lua
 }
@@ -26,7 +26,7 @@ func TestLua_Generate(t *testing.T) {
 	t.Run("", func(t *testing.T) {
 		l := newLua()
 		defer l.Close()
-		got, err := l.Generate([]byte("test"), 10)
+		got, err := l.Generate(1, []byte("test"), 10)
 		if err != nil {
 			t.Errorf(
 				"Lua.Generate() error = %v, wantErr %v",

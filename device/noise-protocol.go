@@ -52,11 +52,18 @@ const (
 	WGLabelCookie     = "cookie--"
 )
 
+const (
+	DefaultMessageInitiationType  uint32 = 1
+	DefaultMessageResponseType    uint32 = 2
+	DefaultMessageCookieReplyType uint32 = 3
+	DefaultMessageTransportType   uint32 = 4
+)
+
 var (
-	MessageInitiationType  uint32 = 1
-	MessageResponseType    uint32 = 2
-	MessageCookieReplyType uint32 = 3
-	MessageTransportType   uint32 = 4
+	MessageInitiationType   uint32 = DefaultMessageInitiationType  
+	MessageResponseType     uint32 = DefaultMessageResponseType    
+	MessageCookieReplyType  uint32 = DefaultMessageCookieReplyType 
+	MessageTransportType    uint32 = DefaultMessageTransportType   
 )
 
 const (

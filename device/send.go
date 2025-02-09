@@ -175,7 +175,7 @@ func (peer *Peer) SendHandshakeInitiation(isRetry bool) error {
 	peer.cookieGenerator.AddMacs(packet)
 	junkedHeader = append(junkedHeader, packet...)
 
-	if junkedHeader, err = peer.device.codecPacket(junkedHeader); err != nil {
+	if junkedHeader, err = peer.device.codecPacket(DefaultMessageInitiationType, junkedHeader); err != nil {
 		return err
 	}
 
@@ -237,7 +237,7 @@ func (peer *Peer) SendHandshakeResponse() error {
 	peer.cookieGenerator.AddMacs(packet)
 	junkedHeader = append(junkedHeader, packet...)
 
-	if junkedHeader, err = peer.device.codecPacket(junkedHeader); err != nil {
+	if junkedHeader, err = peer.device.codecPacket(DefaultMessageResponseType, junkedHeader); err != nil {
 		return err
 	}
 
@@ -286,7 +286,7 @@ func (device *Device) SendHandshakeCookie(
 	writer := bytes.NewBuffer(buf[:0])
 	binary.Write(writer, binary.LittleEndian, reply)
 	packet := writer.Bytes()
-	if packet, err = device.codecPacket(packet); err != nil {
+	if packet, err = device.codecPacket(DefaultMessageCookieReplyType, packet); err != nil {
 		return err
 	}
 
@@ -547,10 +547,10 @@ func calculatePaddingSize(packetSize, mtu int) int {
 	return paddedSize - lastUnit
 }
 
-func (device *Device) codecPacket(packet []byte) ([]byte, error) {
+func (device *Device) codecPacket(msgType uint32, packet []byte) ([]byte, error) {
 	if device.luaAdapter != nil {
 		var err error
-		packet, err = device.luaAdapter.Generate(packet, device.packetCounter.Add(1))
+		packet, err = device.luaAdapter.Generate(int64(msgType),packet, device.packetCounter.Add(1))
 		if err != nil {
 			device.log.Errorf("%v - Failed to run codec generate: %v", device, err)
 			return nil, err
@@ -603,9 +603,9 @@ func (device *Device) RoutineEncryption(id int) {
 				elem.packet,
 				nil,
 			)
-			// TODO: check
+
 			var err error
-			if elem.packet, err = device.codecPacket(elem.packet); err != nil {
+			if elem.packet, err = device.codecPacket(DefaultMessageTransportType, elem.packet); err != nil {
 				continue
 			}
 		}

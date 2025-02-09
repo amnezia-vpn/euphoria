@@ -433,6 +433,7 @@ func (device *Device) Close() {
 
 	if device.luaAdapter != nil {
 		device.luaAdapter.Close()
+		device.luaAdapter = nil
 	}
 	device.log.Verbosef("Device closed")
 	close(device.closed)
@@ -585,10 +586,10 @@ func (device *Device) isAdvancedSecurityOn() bool {
 
 func (device *Device) resetProtocol() {
 	// restore default message type values
-	MessageInitiationType = 1
-	MessageResponseType = 2
-	MessageCookieReplyType = 3
-	MessageTransportType = 4
+	MessageInitiationType = DefaultMessageInitiationType
+	MessageResponseType = DefaultMessageResponseType
+	MessageCookieReplyType = DefaultMessageCookieReplyType
+	MessageTransportType = DefaultMessageTransportType
 }
 
 func (device *Device) handlePostConfig(tempASecCfg *aSecCfgType) (err error) {
@@ -721,7 +722,7 @@ func (device *Device) handlePostConfig(tempASecCfg *aSecCfgType) (err error) {
 		MessageInitiationType = device.aSecCfg.initPacketMagicHeader
 	} else {
 		device.log.Verbosef("UAPI: Using default init type")
-		MessageInitiationType = 1
+		MessageInitiationType = DefaultMessageInitiationType
 	}
 
 	if tempASecCfg.responsePacketMagicHeader > 4 {
@@ -731,7 +732,7 @@ func (device *Device) handlePostConfig(tempASecCfg *aSecCfgType) (err error) {
 		MessageResponseType = device.aSecCfg.responsePacketMagicHeader
 	} else {
 		device.log.Verbosef("UAPI: Using default response type")
-		MessageResponseType = 2
+		MessageResponseType = DefaultMessageResponseType
 	}
 
 	if tempASecCfg.underloadPacketMagicHeader > 4 {
@@ -741,7 +742,7 @@ func (device *Device) handlePostConfig(tempASecCfg *aSecCfgType) (err error) {
 		MessageCookieReplyType = device.aSecCfg.underloadPacketMagicHeader
 	} else {
 		device.log.Verbosef("UAPI: Using default underload type")
-		MessageCookieReplyType = 3
+		MessageCookieReplyType = DefaultMessageCookieReplyType
 	}
 
 	if tempASecCfg.transportPacketMagicHeader > 4 {
@@ -751,7 +752,7 @@ func (device *Device) handlePostConfig(tempASecCfg *aSecCfgType) (err error) {
 		MessageTransportType = device.aSecCfg.transportPacketMagicHeader
 	} else {
 		device.log.Verbosef("UAPI: Using default transport type")
-		MessageTransportType = 4
+		MessageTransportType = DefaultMessageTransportType
 	}
 
 	isSameMap := map[uint32]bool{}

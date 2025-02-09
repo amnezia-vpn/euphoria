@@ -129,7 +129,7 @@ func (device *Device) RoutineReceiveIncoming(
 		}
 		deathSpiral = 0
 
-		device.aSecMux.RLock()
+		device.awg.aSecMux.RLock()
 		// handle each packet in the batch
 		for i, size := range sizes[:count] {
 			if size < MinMessageSize {
@@ -138,8 +138,8 @@ func (device *Device) RoutineReceiveIncoming(
 
 			// check size of packet
 			packet := bufsArrs[i][:size]
-			if device.luaAdapter != nil {
-				packet, err = device.luaAdapter.Parse(packet)
+			if device.awg.luaAdapter != nil {
+				packet, err = device.awg.luaAdapter.Parse(packet)
 				if err != nil {
 					device.log.Verbosef("Couldn't parse message; reason: %v", err)
 					continue
@@ -251,7 +251,7 @@ func (device *Device) RoutineReceiveIncoming(
 			default:
 			}
 		}
-		device.aSecMux.RUnlock()
+		device.awg.aSecMux.RUnlock()
 		for peer, elemsContainer := range elemsByPeer {
 			if peer.isRunning.Load() {
 				peer.queue.inbound.c <- elemsContainer
@@ -310,7 +310,7 @@ func (device *Device) RoutineHandshake(id int) {
 
 	for elem := range device.queue.handshake.c {
 
-		device.aSecMux.RLock()
+		device.awg.aSecMux.RLock()
 
 		// handle cookie fields and ratelimiting
 
@@ -462,7 +462,7 @@ func (device *Device) RoutineHandshake(id int) {
 			peer.SendKeepalive()
 		}
 	skip:
-		device.aSecMux.RUnlock()
+		device.awg.aSecMux.RUnlock()
 		device.PutMessageBuffer(elem.buffer)
 	}
 }

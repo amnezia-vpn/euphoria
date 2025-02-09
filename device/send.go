@@ -131,9 +131,9 @@ func (peer *Peer) SendHandshakeInitiation(isRetry bool) error {
 	// so only packet processed for cookie generation
 	var junkedHeader []byte
 	if peer.device.isAdvancedSecurityOn() {
-		peer.device.aSecMux.RLock()
-		junks, err := peer.device.junkCreator.createJunkPackets(peer)
-		peer.device.aSecMux.RUnlock()
+		peer.device.awg.aSecMux.RLock()
+		junks, err := peer.device.awg.junkCreator.createJunkPackets(peer)
+		peer.device.awg.aSecMux.RUnlock()
 
 		if err != nil {
 			peer.device.log.Errorf("%v - %v", peer, err)
@@ -153,19 +153,19 @@ func (peer *Peer) SendHandshakeInitiation(isRetry bool) error {
 			}
 		}
 
-		peer.device.aSecMux.RLock()
-		if peer.device.aSecCfg.initPacketJunkSize != 0 {
-			buf := make([]byte, 0, peer.device.aSecCfg.initPacketJunkSize)
+		peer.device.awg.aSecMux.RLock()
+		if peer.device.awg.aSecCfg.initPacketJunkSize != 0 {
+			buf := make([]byte, 0, peer.device.awg.aSecCfg.initPacketJunkSize)
 			writer := bytes.NewBuffer(buf[:0])
-			err = peer.device.junkCreator.appendJunk(writer, peer.device.aSecCfg.initPacketJunkSize)
+			err = peer.device.awg.junkCreator.appendJunk(writer, peer.device.awg.aSecCfg.initPacketJunkSize)
 			if err != nil {
 				peer.device.log.Errorf("%v - %v", peer, err)
-				peer.device.aSecMux.RUnlock()
+				peer.device.awg.aSecMux.RUnlock()
 				return err
 			}
 			junkedHeader = writer.Bytes()
 		}
-		peer.device.aSecMux.RUnlock()
+		peer.device.awg.aSecMux.RUnlock()
 	}
 
 	var buf [MessageInitiationSize]byte
@@ -215,19 +215,19 @@ func (peer *Peer) SendHandshakeResponse() error {
 	}
 	var junkedHeader []byte
 	if peer.device.isAdvancedSecurityOn() {
-		peer.device.aSecMux.RLock()
-		if peer.device.aSecCfg.responsePacketJunkSize != 0 {
-			buf := make([]byte, 0, peer.device.aSecCfg.responsePacketJunkSize)
+		peer.device.awg.aSecMux.RLock()
+		if peer.device.awg.aSecCfg.responsePacketJunkSize != 0 {
+			buf := make([]byte, 0, peer.device.awg.aSecCfg.responsePacketJunkSize)
 			writer := bytes.NewBuffer(buf[:0])
-			err = peer.device.junkCreator.appendJunk(writer, peer.device.aSecCfg.responsePacketJunkSize)
+			err = peer.device.awg.junkCreator.appendJunk(writer, peer.device.awg.aSecCfg.responsePacketJunkSize)
 			if err != nil {
-				peer.device.aSecMux.RUnlock()
+				peer.device.awg.aSecMux.RUnlock()
 				peer.device.log.Errorf("%v - %v", peer, err)
 				return err
 			}
 			junkedHeader = writer.Bytes()
 		}
-		peer.device.aSecMux.RUnlock()
+		peer.device.awg.aSecMux.RUnlock()
 	}
 	var buf [MessageResponseSize]byte
 	writer := bytes.NewBuffer(buf[:0])
@@ -548,9 +548,9 @@ func calculatePaddingSize(packetSize, mtu int) int {
 }
 
 func (device *Device) codecPacket(msgType uint32, packet []byte) ([]byte, error) {
-	if device.luaAdapter != nil {
+	if device.awg.luaAdapter != nil {
 		var err error
-		packet, err = device.luaAdapter.Generate(int64(msgType),packet, device.packetCounter.Add(1))
+		packet, err = device.awg.luaAdapter.Generate(int64(msgType),packet)
 		if err != nil {
 			device.log.Errorf("%v - Failed to run codec generate: %v", device, err)
 			return nil, err

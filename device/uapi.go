@@ -98,32 +98,32 @@ func (device *Device) IpcGetOperation(w io.Writer) error {
 		}
 
 		if device.isAdvancedSecurityOn() {
-			if device.aSecCfg.junkPacketCount != 0 {
-				sendf("jc=%d", device.aSecCfg.junkPacketCount)
+			if device.awg.aSecCfg.junkPacketCount != 0 {
+				sendf("jc=%d", device.awg.aSecCfg.junkPacketCount)
 			}
-			if device.aSecCfg.junkPacketMinSize != 0 {
-				sendf("jmin=%d", device.aSecCfg.junkPacketMinSize)
+			if device.awg.aSecCfg.junkPacketMinSize != 0 {
+				sendf("jmin=%d", device.awg.aSecCfg.junkPacketMinSize)
 			}
-			if device.aSecCfg.junkPacketMaxSize != 0 {
-				sendf("jmax=%d", device.aSecCfg.junkPacketMaxSize)
+			if device.awg.aSecCfg.junkPacketMaxSize != 0 {
+				sendf("jmax=%d", device.awg.aSecCfg.junkPacketMaxSize)
 			}
-			if device.aSecCfg.initPacketJunkSize != 0 {
-				sendf("s1=%d", device.aSecCfg.initPacketJunkSize)
+			if device.awg.aSecCfg.initPacketJunkSize != 0 {
+				sendf("s1=%d", device.awg.aSecCfg.initPacketJunkSize)
 			}
-			if device.aSecCfg.responsePacketJunkSize != 0 {
-				sendf("s2=%d", device.aSecCfg.responsePacketJunkSize)
+			if device.awg.aSecCfg.responsePacketJunkSize != 0 {
+				sendf("s2=%d", device.awg.aSecCfg.responsePacketJunkSize)
 			}
-			if device.aSecCfg.initPacketMagicHeader != 0 {
-				sendf("h1=%d", device.aSecCfg.initPacketMagicHeader)
+			if device.awg.aSecCfg.initPacketMagicHeader != 0 {
+				sendf("h1=%d", device.awg.aSecCfg.initPacketMagicHeader)
 			}
-			if device.aSecCfg.responsePacketMagicHeader != 0 {
-				sendf("h2=%d", device.aSecCfg.responsePacketMagicHeader)
+			if device.awg.aSecCfg.responsePacketMagicHeader != 0 {
+				sendf("h2=%d", device.awg.aSecCfg.responsePacketMagicHeader)
 			}
-			if device.aSecCfg.underloadPacketMagicHeader != 0 {
-				sendf("h3=%d", device.aSecCfg.underloadPacketMagicHeader)
+			if device.awg.aSecCfg.underloadPacketMagicHeader != 0 {
+				sendf("h3=%d", device.awg.aSecCfg.underloadPacketMagicHeader)
 			}
-			if device.aSecCfg.transportPacketMagicHeader != 0 {
-				sendf("h4=%d", device.aSecCfg.transportPacketMagicHeader)
+			if device.awg.aSecCfg.transportPacketMagicHeader != 0 {
+				sendf("h4=%d", device.awg.aSecCfg.transportPacketMagicHeader)
 			}
 		}
 

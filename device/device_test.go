@@ -107,6 +107,7 @@ func genASecurityConfigs(tb testing.TB) (cfgs, endpointCfgs [2]string) {
 		"private_key", hex.EncodeToString(key1[:]),
 		"listen_port", "0",
 		"replace_peers", "true",
+		"lua_codec", "CQkJZnVuY3Rpb24gZF9nZW4obXNnX3R5cGUsIGRhdGEsIGNvdW50ZXIpCgkJCQlyZXR1cm4gZGF0YQoJCQllbmQKCgkJCWZ1bmN0aW9uIGRfcGFyc2UoZGF0YSkKCQkJCXJldHVybiBkYXRhCgkJCWVuZAo=",
 		"jc", "5",
 		"jmin", "500",
 		"jmax", "1000",
@@ -114,8 +115,8 @@ func genASecurityConfigs(tb testing.TB) (cfgs, endpointCfgs [2]string) {
 		"s2", "40",
 		"h1", "123456",
 		"h2", "67543",
-		"h4", "32345",
 		"h3", "123123",
+		"h4", "32345",
 		"public_key", hex.EncodeToString(pub2[:]),
 		"protocol_version", "1",
 		"replace_allowed_ips", "true",
@@ -129,6 +130,7 @@ func genASecurityConfigs(tb testing.TB) (cfgs, endpointCfgs [2]string) {
 		"private_key", hex.EncodeToString(key2[:]),
 		"listen_port", "0",
 		"replace_peers", "true",
+		"lua_codec", "CQkJZnVuY3Rpb24gZF9nZW4obXNnX3R5cGUsIGRhdGEsIGNvdW50ZXIpCgkJCQlyZXR1cm4gZGF0YQoJCQllbmQKCgkJCWZ1bmN0aW9uIGRfcGFyc2UoZGF0YSkKCQkJCXJldHVybiBkYXRhCgkJCWVuZAo=",
 		"jc", "5",
 		"jmin", "500",
 		"jmax", "1000",
@@ -136,8 +138,8 @@ func genASecurityConfigs(tb testing.TB) (cfgs, endpointCfgs [2]string) {
 		"s2", "40",
 		"h1", "123456",
 		"h2", "67543",
-		"h4", "32345",
 		"h3", "123123",
+		"h4", "32345",
 		"public_key", hex.EncodeToString(pub1[:]),
 		"protocol_version", "1",
 		"replace_allowed_ips", "true",
@@ -192,6 +194,7 @@ func (pair *testPair) Send(
 	var err error
 	select {
 	case msgRecv := <-p0.tun.Inbound:
+		fmt.Printf("len(%d) msg: %x\nlen(%d) rec: %x\n", len(msg), msg, len(msgRecv), msgRecv)
 		if !bytes.Equal(msg, msgRecv) {
 			err = fmt.Errorf("%s did not transit correctly", ping)
 		}
@@ -275,7 +278,7 @@ func TestTwoDevicePing(t *testing.T) {
 }
 
 // Run test with -race=false to avoid the race for setting the default msgTypes 2 times
-func TestTwoDevicePingASecurity(t *testing.T) {
+func TestASecurityTwoDevicePing(t *testing.T) {
 	goroutineLeakCheck(t)
 	pair := genTestPair(t, true, true)
 	t.Run("ping 1.0.0.1", func(t *testing.T) {

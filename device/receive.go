@@ -9,9 +9,11 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"net"
 	"sync"
 	"time"
+	"unsafe"
 
 	"github.com/amnezia-vpn/amneziawg-go/conn"
 	"golang.org/x/crypto/chacha20poly1305"
@@ -138,8 +140,24 @@ func (device *Device) RoutineReceiveIncoming(
 
 			// check size of packet
 			packet := bufsArrs[i][:size]
+			fmt.Printf("bufsArrs size: %d\n%.100x\n", size, bufsArrs[i])
+			fmt.Printf("packet before: %x\n", packet)
 			if device.awg.luaAdapter != nil {
-				packet, err = device.awg.luaAdapter.Parse(packet)
+				ptr:= unsafe.Pointer(bufsArrs[i])        // Get pointer to the array
+				slicePtr:= (*byte)(ptr)          // Type conversion to the array type
+
+				realPacket, err := device.awg.luaAdapter.Parse(packet)
+				// Copy data from newSlice to the memory pointed to by slicedPtr
+				newSliceLen:= len(realPacket)
+				for j:= 0; j < newSliceLen; j++ {
+					*(*byte)(unsafe.Pointer(uintptr(unsafe.Pointer(slicePtr)) + uintptr(j))) = realPacket[j]
+				}
+				fmt.Printf("packet after:  %x\n", packet)
+				fmt.Printf("bufsArs after size: %d\n%.100x\n", size, bufsArrs[i])
+				// diff := size - len(packet)
+				// bufsArrs[i][:len(packet)] = bufsArrs[i][diff:len(packet)]
+				size = len(packet)
+				fmt.Println("after size: ", size)
 				if err != nil {
 					device.log.Verbosef("Couldn't parse message; reason: %v", err)
 					continue
@@ -151,7 +169,7 @@ func (device *Device) RoutineReceiveIncoming(
 					junkSize := msgTypeToJunkSize[assumedMsgType]
 					// transport size can align with other header types;
 					// making sure we have the right msgType
-					msgType = binary.LittleEndian.Uint32(packet[junkSize : junkSize+4])
+					msgType = binary.LittleEndian.Uint32(packet[junkSize:junkSize+4])
 					if msgType == assumedMsgType {
 						packet = packet[junkSize:]
 					} else {
@@ -285,15 +303,18 @@ func (device *Device) RoutineDecryption(id int) {
 			elem.counter = binary.LittleEndian.Uint64(counter)
 			// copy counter to nonce
 			binary.LittleEndian.PutUint64(nonce[0x4:0xc], elem.counter)
+			fmt.Printf("before decrypt: %x\n", elem.packet)
 			elem.packet, err = elem.keypair.receive.Open(
 				content[:0],
 				nonce[:],
 				content,
 				nil,
 			)
+
 			if err != nil {
 				elem.packet = nil
 			}
+			fmt.Printf("decrypt: %x\n", elem.packet)
 		}
 		elemsContainer.Unlock()
 	}
@@ -551,10 +572,13 @@ func (peer *Peer) RoutineSequentialReceiver(maxBatchSize int) {
 				continue
 			}
 
+			fmt.Printf("bufs packet: %x\n", elem.packet)
+			fmt.Printf("bufs packet: %x\n", elem.buffer[len(elem.packet)+1:MessageTransportOffsetContent+len(elem.packet)])
 			bufs = append(
 				bufs,
 				elem.buffer[:MessageTransportOffsetContent+len(elem.packet)],
 			)
+			fmt.Printf("bufs before send: %.100x\n", elem.buffer)
 		}
 
 		peer.rxBytes.Add(rxBytesLen)
@@ -568,6 +592,7 @@ func (peer *Peer) RoutineSequentialReceiver(maxBatchSize int) {
 			peer.timersDataReceived()
 		}
 		if len(bufs) > 0 {
+			fmt.Printf("bufs: %x\n", bufs)
 			_, err := device.tun.device.Write(bufs, MessageTransportOffsetContent)
 			if err != nil && !device.isClosed() {
 				device.log.Errorf("Failed to write packets to TUN device: %v", err)

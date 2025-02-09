@@ -13,11 +13,11 @@ func newLua() *Lua {
 			end
 
 			function d_parse(data)
-				local header = "10header"
+				local header = "1header"
 				return string.sub(data, #header+1)
 			end
 		*/
-		Base64LuaCode: "CmZ1bmN0aW9uIGRfZ2VuKG1zZ190eXBlLCBkYXRhLCBjb3VudGVyKQoJbG9jYWwgaGVhZGVyID0gImhlYWRlciIKCXJldHVybiBjb3VudGVyIC4uIGhlYWRlciAuLiBkYXRhCmVuZAoKZnVuY3Rpb24gZF9wYXJzZShkYXRhKQoJbG9jYWwgaGVhZGVyID0gIjEwaGVhZGVyIgoJcmV0dXJuIHN0cmluZy5zdWIoZGF0YSwgI2hlYWRlcisxKQplbmQK",
+		Base64LuaCode: "CmZ1bmN0aW9uIGRfZ2VuKG1zZ190eXBlLCBkYXRhLCBjb3VudGVyKQoJbG9jYWwgaGVhZGVyID0gImhlYWRlciIKCXJldHVybiBjb3VudGVyIC4uIGhlYWRlciAuLiBkYXRhCmVuZAoKZnVuY3Rpb24gZF9wYXJzZShkYXRhKQoJbG9jYWwgaGVhZGVyID0gIjFoZWFkZXIiCglyZXR1cm4gc3RyaW5nLnN1YihkYXRhLCAjaGVhZGVyKzEpCmVuZAo=",
 	})
 	return lua
 }
@@ -47,7 +47,7 @@ func TestLua_Parse(t *testing.T) {
 	t.Run("", func(t *testing.T) {
 		l := newLua()
 		defer l.Close()
-		got, err := l.Parse([]byte("10headertest"))
+		got, err := l.Parse([]byte("1headertest"))
 		if err != nil {
 			t.Errorf("Lua.Parse() error = %v, wantErr %v", err, nil)
 			return

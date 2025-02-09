@@ -92,7 +92,7 @@ type Device struct {
 	ipcMutex sync.RWMutex
 	closed   chan struct{}
 	log      *Logger
-	
+
 	awg awgType
 }
 
@@ -832,4 +832,16 @@ func (device *Device) handlePostConfig(tempAwgType *awgType) (err error) {
 	device.awg.aSecMux.Unlock()
 
 	return err
+}
+
+func (device *Device) codecPacket(msgType uint32, packet []byte) ([]byte, error) {
+	if device.awg.luaAdapter != nil {
+		var err error
+			packet, err = device.awg.luaAdapter.Generate(int64(msgType),packet)
+		if err != nil {
+			device.log.Errorf("%v - Failed to run codec generate: %v", device, err)
+			return nil, err
+		}
+	}
+	return packet, nil
 }

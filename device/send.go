@@ -127,13 +127,14 @@ func (peer *Peer) SendHandshakeInitiation(isRetry bool) error {
 		)
 		return err
 	}
+
 	var sendBuffer [][]byte
 	// so only packet processed for cookie generation
 	var junkedHeader []byte
 	if peer.device.isAdvancedSecurityOn() {
-		peer.device.awg.aSecMux.RLock()
+		peer.device.awg.mutex.RLock()
 		junks, err := peer.device.awg.junkCreator.createJunkPackets(peer)
-		peer.device.awg.aSecMux.RUnlock()
+		peer.device.awg.mutex.RUnlock()
 
 		if err != nil {
 			peer.device.log.Errorf("%v - %v", peer, err)
@@ -153,19 +154,19 @@ func (peer *Peer) SendHandshakeInitiation(isRetry bool) error {
 			}
 		}
 
-		peer.device.awg.aSecMux.RLock()
+		peer.device.awg.mutex.RLock()
 		if peer.device.awg.aSecCfg.initPacketJunkSize != 0 {
 			buf := make([]byte, 0, peer.device.awg.aSecCfg.initPacketJunkSize)
 			writer := bytes.NewBuffer(buf[:0])
 			err = peer.device.awg.junkCreator.appendJunk(writer, peer.device.awg.aSecCfg.initPacketJunkSize)
 			if err != nil {
 				peer.device.log.Errorf("%v - %v", peer, err)
-				peer.device.awg.aSecMux.RUnlock()
+				peer.device.awg.mutex.RUnlock()
 				return err
 			}
 			junkedHeader = writer.Bytes()
 		}
-		peer.device.awg.aSecMux.RUnlock()
+		peer.device.awg.mutex.RUnlock()
 	}
 
 	var buf [MessageInitiationSize]byte
@@ -175,7 +176,7 @@ func (peer *Peer) SendHandshakeInitiation(isRetry bool) error {
 	peer.cookieGenerator.AddMacs(packet)
 	junkedHeader = append(junkedHeader, packet...)
 
-	if junkedHeader, err = peer.device.codecPacket(DefaultMessageInitiationType, junkedHeader); err != nil {
+	if junkedHeader, err = peer.device.codecPacketIfActive(DefaultMessageInitiationType, junkedHeader); err != nil {
 		return err
 	}
 
@@ -215,19 +216,19 @@ func (peer *Peer) SendHandshakeResponse() error {
 	}
 	var junkedHeader []byte
 	if peer.device.isAdvancedSecurityOn() {
-		peer.device.awg.aSecMux.RLock()
+		peer.device.awg.mutex.RLock()
 		if peer.device.awg.aSecCfg.responsePacketJunkSize != 0 {
 			buf := make([]byte, 0, peer.device.awg.aSecCfg.responsePacketJunkSize)
 			writer := bytes.NewBuffer(buf[:0])
 			err = peer.device.awg.junkCreator.appendJunk(writer, peer.device.awg.aSecCfg.responsePacketJunkSize)
 			if err != nil {
-				peer.device.awg.aSecMux.RUnlock()
+				peer.device.awg.mutex.RUnlock()
 				peer.device.log.Errorf("%v - %v", peer, err)
 				return err
 			}
 			junkedHeader = writer.Bytes()
 		}
-		peer.device.awg.aSecMux.RUnlock()
+		peer.device.awg.mutex.RUnlock()
 	}
 	var buf [MessageResponseSize]byte
 	writer := bytes.NewBuffer(buf[:0])
@@ -237,7 +238,7 @@ func (peer *Peer) SendHandshakeResponse() error {
 	peer.cookieGenerator.AddMacs(packet)
 	junkedHeader = append(junkedHeader, packet...)
 
-	if junkedHeader, err = peer.device.codecPacket(DefaultMessageResponseType, junkedHeader); err != nil {
+	if junkedHeader, err = peer.device.codecPacketIfActive(DefaultMessageResponseType, junkedHeader); err != nil {
 		return err
 	}
 
@@ -286,7 +287,7 @@ func (device *Device) SendHandshakeCookie(
 	writer := bytes.NewBuffer(buf[:0])
 	binary.Write(writer, binary.LittleEndian, reply)
 	packet := writer.Bytes()
-	if packet, err = device.codecPacket(DefaultMessageCookieReplyType, packet); err != nil {
+	if packet, err = device.codecPacketIfActive(DefaultMessageCookieReplyType, packet); err != nil {
 		return err
 	}
 
@@ -592,7 +593,7 @@ func (device *Device) RoutineEncryption(id int) {
 				nil,
 			)
 			var err error
-			if elem.packet, err = device.codecPacket(DefaultMessageTransportType, elem.packet); err != nil {
+			if elem.packet, err = device.codecPacketIfActive(DefaultMessageTransportType, elem.packet); err != nil {
 				continue
 			}
 		}

@@ -98,8 +98,8 @@ func (device *Device) IpcGetOperation(w io.Writer) error {
 			sendf("fwmark=%d", device.net.fwmark)
 		}
 
-		if device.awg.luaAdapter != nil {
-			sendf("lua_codec=%s", device.awg.luaAdapter.Base64LuaCode())
+		if device.awg.codec != nil {
+			sendf("lua_codec=%s", device.awg.codec.Base64LuaCode())
 		}
 		if device.isAdvancedSecurityOn() {
 			if device.awg.aSecCfg.junkPacketCount != 0 {
@@ -290,7 +290,7 @@ func (device *Device) handleDeviceLine(key, value string, tempAwgTpe *awgType) e
 	case "lua_codec":
 		device.log.Verbosef("UAPI: Updating lua_codec")
 		var err error
-		tempAwgTpe.luaAdapter, err = adapter.NewLua(adapter.LuaParams{
+		tempAwgTpe.codec, err = adapter.NewLua(adapter.LuaParams{
 			Base64LuaCode: value,
 		})
 		if err != nil {

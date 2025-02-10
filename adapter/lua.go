@@ -8,9 +8,9 @@ import (
 	"github.com/aarzilli/golua/lua"
 )
 
-// TODO: aSec sync is enough?
 type Lua struct {
-	state         *lua.State
+	generateState *lua.State
+	parseState    *lua.State
 	packetCounter atomic.Int64
 	base64LuaCode string
 }
@@ -24,51 +24,72 @@ func NewLua(params LuaParams) (*Lua, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(string(luaCode))
 
+	strLuaCode := string(luaCode)
+
+	generateState, err := initState(strLuaCode)
+	if err != nil {
+		return nil, err
+	}
+	parseState, err := initState(strLuaCode)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Lua{
+		generateState: generateState,
+		parseState:    parseState,
+		base64LuaCode: params.Base64LuaCode,
+	}, nil
+}
+
+func initState(luaCode string) (*lua.State, error) {
 	state := lua.NewState()
 	state.OpenLibs()
 
 	if err := state.DoString(string(luaCode)); err != nil {
 		return nil, fmt.Errorf("Error loading Lua code: %v\n", err)
 	}
-	return &Lua{state: state, base64LuaCode: params.Base64LuaCode}, nil
+	return state, nil
 }
 
 func (l *Lua) Close() {
-	l.state.Close()
+	l.generateState.Close()
+	l.parseState.Close()
 }
 
+// Only thread safe if used by wg packet creation which happens independably
 func (l *Lua) Generate(
 	msgType int64,
 	data []byte,
 ) ([]byte, error) {
-	l.state.GetGlobal("d_gen")
+	l.generateState.GetGlobal("d_gen")
 
-	l.state.PushInteger(msgType)
-	l.state.PushBytes(data)
-	l.state.PushInteger(l.packetCounter.Add(1))
+	l.generateState.PushInteger(msgType)
+	l.generateState.PushBytes(data)
+	l.generateState.PushInteger(l.packetCounter.Add(1))
 
-	if err := l.state.Call(3, 1); err != nil {
+	if err := l.generateState.Call(3, 1); err != nil {
 		return nil, fmt.Errorf("Error calling Lua function: %v\n", err)
 	}
 
-	result := l.state.ToBytes(-1)
-	l.state.Pop(1)
+	result := l.generateState.ToBytes(-1)
+	l.generateState.Pop(1)
 
 	return result, nil
 }
 
+// Only thread safe if used by wg packet receive which happens independably
 func (l *Lua) Parse(data []byte) ([]byte, error) {
-	l.state.GetGlobal("d_parse")
+	l.parseState.GetGlobal("d_parse")
 
-	l.state.PushBytes(data)
-	if err := l.state.Call(1, 1); err != nil {
+	l.parseState.PushBytes(data)
+	if err := l.parseState.Call(1, 1); err != nil {
 		return nil, fmt.Errorf("Error calling Lua function: %v\n", err)
 	}
 
-	result := l.state.ToBytes(-1)
-	l.state.Pop(1)
+	result := l.parseState.ToBytes(-1)
+	l.parseState.Pop(1)
 
 	return result, nil
 }

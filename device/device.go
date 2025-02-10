@@ -98,11 +98,11 @@ type Device struct {
 
 type awgType struct {
 	isASecOn    abool.AtomicBool
-	aSecMux     sync.RWMutex
+	mutex     sync.RWMutex
 	aSecCfg     aSecCfgType
 	junkCreator junkCreator
 
-	luaAdapter 	  *adapter.Lua
+	codec 	  *adapter.Lua
 }
 
 type aSecCfgType struct {
@@ -434,9 +434,9 @@ func (device *Device) Close() {
 
 	device.resetProtocol()
 
-	if device.awg.luaAdapter != nil {
-		device.awg.luaAdapter.Close()
-		device.awg.luaAdapter = nil
+	if device.awg.codec != nil {
+		device.awg.codec.Close()
+		device.awg.codec = nil
 	}
 	device.log.Verbosef("Device closed")
 	close(device.closed)
@@ -601,7 +601,7 @@ func (device *Device) handlePostConfig(tempAwgType *awgType) (err error) {
 	}
 
 	isASecOn := false
-	device.awg.aSecMux.Lock()
+	device.awg.mutex.Lock()
 	if tempAwgType.aSecCfg.junkPacketCount < 0 {
 		err = ipcErrorf(
 			ipc.IpcErrorInvalid,
@@ -828,16 +828,20 @@ func (device *Device) handlePostConfig(tempAwgType *awgType) (err error) {
 	if device.awg.isASecOn.IsSet() {
 		device.awg.junkCreator, err = NewJunkCreator(device)
 	}
-	device.awg.luaAdapter = tempAwgType.luaAdapter
-	device.awg.aSecMux.Unlock()
+	device.awg.codec = tempAwgType.codec
+	device.awg.mutex.Unlock()
 
 	return err
 }
 
-func (device *Device) codecPacket(msgType uint32, packet []byte) ([]byte, error) {
-	if device.awg.luaAdapter != nil {
+func (device *Device) isCodecActive() bool {
+	return device.awg.codec != nil
+}
+
+func (device *Device) codecPacketIfActive(msgType uint32, packet []byte) ([]byte, error) {
+	if device.isCodecActive() {
 		var err error
-			packet, err = device.awg.luaAdapter.Generate(int64(msgType),packet)
+			packet, err = device.awg.codec.Generate(int64(msgType),packet)
 		if err != nil {
 			device.log.Errorf("%v - Failed to run codec generate: %v", device, err)
 			return nil, err

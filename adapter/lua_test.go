@@ -58,3 +58,25 @@ func TestLua_Parse(t *testing.T) {
 		}
 	})
 }
+
+
+var R []byte
+var l = newLua()
+func BenchmarkLuaGenerate(b *testing.B) {
+	for i := 0; i < b.N; i++ {		var err error
+		R, err = l.Generate(1, []byte("test"))
+		if err != nil {
+			return
+		}
+	}
+}
+
+func BenchmarkLuaParse(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		var err error
+		R, err = l.Parse([]byte("1headertest"))
+		if err != nil {
+			return
+		}
+	}
+}

@@ -12,7 +12,6 @@ import (
 	"net"
 	"sync"
 	"time"
-	"unsafe"
 
 	"github.com/amnezia-vpn/amneziawg-go/conn"
 	"golang.org/x/crypto/chacha20poly1305"
@@ -130,7 +129,7 @@ func (device *Device) RoutineReceiveIncoming(
 		}
 		deathSpiral = 0
 
-		device.awg.aSecMux.RLock()
+		device.awg.mutex.RLock()
 		// handle each packet in the batch
 		for i, size := range sizes[:count] {
 			if size < MinMessageSize {
@@ -138,15 +137,10 @@ func (device *Device) RoutineReceiveIncoming(
 			}
 
 			packet := bufsArrs[i][:size]
-			if device.awg.luaAdapter != nil {
-				realPacket, err := device.awg.luaAdapter.Parse(packet)
-
-				packetPtr := (*byte)(unsafe.Pointer(bufsArrs[i])) // Get pointer to the array
-				// Copy data from realPacket to the memory pointed to by bufsArrs[i]
+			if device.isCodecActive() {
+				realPacket, err := device.awg.codec.Parse(packet)
+				copy(packet, realPacket)
 				size = len(realPacket)
-				for j := 0; j < size; j++ {
-					*(*byte)(unsafe.Pointer(uintptr(unsafe.Pointer(packetPtr)) + uintptr(j))) = realPacket[j]
-				}
 				packet = bufsArrs[i][:size]
 				if err != nil {
 					device.log.Verbosef(
@@ -262,7 +256,7 @@ func (device *Device) RoutineReceiveIncoming(
 			default:
 			}
 		}
-		device.awg.aSecMux.RUnlock()
+		device.awg.mutex.RUnlock()
 		for peer, elemsContainer := range elemsByPeer {
 			if peer.isRunning.Load() {
 				peer.queue.inbound.c <- elemsContainer
@@ -322,7 +316,7 @@ func (device *Device) RoutineHandshake(id int) {
 
 	for elem := range device.queue.handshake.c {
 
-		device.awg.aSecMux.RLock()
+		device.awg.mutex.RLock()
 
 		// handle cookie fields and ratelimiting
 
@@ -474,7 +468,7 @@ func (device *Device) RoutineHandshake(id int) {
 			peer.SendKeepalive()
 		}
 	skip:
-		device.awg.aSecMux.RUnlock()
+		device.awg.mutex.RUnlock()
 		device.PutMessageBuffer(elem.buffer)
 	}
 }

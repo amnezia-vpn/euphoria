@@ -204,12 +204,12 @@ func (device *Device) CreateMessageInitiation(peer *Peer) (*MessageInitiation, e
 
 	handshake.mixHash(handshake.remoteStatic[:])
 
-	device.awg.aSecMux.RLock()
+	device.awg.mutex.RLock()
 	msg := MessageInitiation{
 		Type:      MessageInitiationType,
 		Ephemeral: handshake.localEphemeral.publicKey(),
 	}
-	device.awg.aSecMux.RUnlock()
+	device.awg.mutex.RUnlock()
 
 	handshake.mixKey(msg.Ephemeral[:])
 	handshake.mixHash(msg.Ephemeral[:])
@@ -263,12 +263,12 @@ func (device *Device) ConsumeMessageInitiation(msg *MessageInitiation) *Peer {
 		chainKey [blake2s.Size]byte
 	)
 
-	device.awg.aSecMux.RLock()
+	device.awg.mutex.RLock()
 	if msg.Type != MessageInitiationType {
-		device.awg.aSecMux.RUnlock()
+		device.awg.mutex.RUnlock()
 		return nil
 	}
-	device.awg.aSecMux.RUnlock()
+	device.awg.mutex.RUnlock()
 
 	device.staticIdentity.RLock()
 	defer device.staticIdentity.RUnlock()
@@ -383,9 +383,9 @@ func (device *Device) CreateMessageResponse(peer *Peer) (*MessageResponse, error
 	}
 
 	var msg MessageResponse
-	device.awg.aSecMux.RLock()
+	device.awg.mutex.RLock()
 	msg.Type = MessageResponseType
-	device.awg.aSecMux.RUnlock()
+	device.awg.mutex.RUnlock()
 	msg.Sender = handshake.localIndex
 	msg.Receiver = handshake.remoteIndex
 
@@ -435,12 +435,12 @@ func (device *Device) CreateMessageResponse(peer *Peer) (*MessageResponse, error
 }
 
 func (device *Device) ConsumeMessageResponse(msg *MessageResponse) *Peer {
-	device.awg.aSecMux.RLock()
+	device.awg.mutex.RLock()
 	if msg.Type != MessageResponseType {
-		device.awg.aSecMux.RUnlock()
+		device.awg.mutex.RUnlock()
 		return nil
 	}
-	device.awg.aSecMux.RUnlock()
+	device.awg.mutex.RUnlock()
 
 	// lookup handshake by receiver
 

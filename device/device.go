@@ -98,7 +98,7 @@ type Device struct {
 
 type awgType struct {
 	isASecOn    abool.AtomicBool
-	mutex     sync.RWMutex
+	mutex       sync.RWMutex
 	aSecCfg     aSecCfgType
 	junkCreator junkCreator
 
@@ -596,6 +596,8 @@ func (device *Device) resetProtocol() {
 }
 
 func (device *Device) handlePostConfig(tempAwgType *awgType) (err error) {
+	device.awg.codec = tempAwgType.codec
+
 	if !tempAwgType.aSecCfg.isSet {
 		return nil
 	}
@@ -828,7 +830,6 @@ func (device *Device) handlePostConfig(tempAwgType *awgType) (err error) {
 	if device.awg.isASecOn.IsSet() {
 		device.awg.junkCreator, err = NewJunkCreator(device)
 	}
-	device.awg.codec = tempAwgType.codec
 	device.awg.mutex.Unlock()
 
 	return err

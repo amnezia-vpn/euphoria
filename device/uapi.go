@@ -18,7 +18,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/amnezia-vpn/amneziawg-go/adapter"
+	"github.com/amnezia-vpn/amneziawg-go/device/internal/adapter"
 	"github.com/amnezia-vpn/amneziawg-go/ipc"
 )
 

@@ -26,6 +26,7 @@ func NewLua(params LuaParams) (*Lua, error) {
 	}
 
 	strLuaCode := string(luaCode)
+	// fmt.Println(strLuaCode)
 
 	generateState, err := initState(strLuaCode)
 	if err != nil {

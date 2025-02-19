@@ -109,7 +109,7 @@ func genASecurityConfigs(tb testing.TB) (cfgs, endpointCfgs [2]string) {
 		"replace_peers", "true",
 		"jc", "5",
 		"jmin", "500",
-		"jmax", "501",
+		"jmax", "1000",
 		"s1", "30",
 		"s2", "40",
 		"h1", "123456",
@@ -131,7 +131,7 @@ func genASecurityConfigs(tb testing.TB) (cfgs, endpointCfgs [2]string) {
 		"replace_peers", "true",
 		"jc", "5",
 		"jmin", "500",
-		"jmax", "501",
+		"jmax", "1000",
 		"s1", "30",
 		"s2", "40",
 		"h1", "123456",
@@ -274,6 +274,7 @@ func TestTwoDevicePing(t *testing.T) {
 	})
 }
 
+// Run test with -race=false to avoid the race for setting the default msgTypes 2 times
 func TestTwoDevicePingASecurity(t *testing.T) {
 	goroutineLeakCheck(t)
 	pair := genTestPair(t, true, true)

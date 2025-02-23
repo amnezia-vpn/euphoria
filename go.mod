@@ -1,4 +1,4 @@
-module github.com/amnezia-vpn/amneziawg-go
+module github.com/amnezia-vpn/euphoria
 
 go 1.24
 

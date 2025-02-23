@@ -59,7 +59,12 @@ func warning() {
 
 func main() {
 	if len(os.Args) == 2 && os.Args[1] == "--version" {
-		fmt.Printf("amneziawg-go %s\n\nUserspace AmneziaWG daemon for %s-%s.\nInformation available at https://amnezia.org\n", Version, runtime.GOOS, runtime.GOARCH)
+		fmt.Printf(
+			"amneziawg-go %s\n\nUserspace AmneziaWG daemon for %s-%s.\nInformation available at https://amnezia.org\n",
+			Version,
+			runtime.GOOS,
+			runtime.GOARCH,
+		)
 		return
 	}
 

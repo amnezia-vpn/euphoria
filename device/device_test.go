@@ -103,19 +103,31 @@ func genASecurityConfigs(tb testing.TB) (cfgs, endpointCfgs [2]string) {
 	}
 	pub1, pub2 := key1.publicKey(), key2.publicKey()
 
+	/*
+		head = "headheadhead"
+		tail = "tailtailtail"
+		function d_gen(msg_type, data, counter)
+			return head .. data .. tail
+		end
+
+		function d_parse(data)
+				return string.match(data, head.. "(.-)".. tail)
+		end
+	*/
 	cfgs[0] = uapiCfg(
 		"private_key", hex.EncodeToString(key1[:]),
 		"listen_port", "0",
 		"replace_peers", "true",
+		"lua_codec", "aGVhZCA9ICJoZWFkaGVhZGhlYWQiCnRhaWwgPSAidGFpbHRhaWx0YWlsIgpmdW5jdGlvbiBkX2dlbihtc2dfdHlwZSwgZGF0YSwgY291bnRlcikKCXJldHVybiBoZWFkIC4uIGRhdGEgLi4gdGFpbAplbmQKCmZ1bmN0aW9uIGRfcGFyc2UoZGF0YSkKICAgICAgICByZXR1cm4gc3RyaW5nLm1hdGNoKGRhdGEsIGhlYWQuLiAiKC4tKSIuLiB0YWlsKQplbmQK",
 		"jc", "5",
 		"jmin", "500",
-		"jmax", "501",
+		"jmax", "1000",
 		"s1", "30",
 		"s2", "40",
 		"h1", "123456",
 		"h2", "67543",
-		"h4", "32345",
 		"h3", "123123",
+		"h4", "32345",
 		"public_key", hex.EncodeToString(pub2[:]),
 		"protocol_version", "1",
 		"replace_allowed_ips", "true",
@@ -129,15 +141,16 @@ func genASecurityConfigs(tb testing.TB) (cfgs, endpointCfgs [2]string) {
 		"private_key", hex.EncodeToString(key2[:]),
 		"listen_port", "0",
 		"replace_peers", "true",
+		"lua_codec", "aGVhZCA9ICJoZWFkaGVhZGhlYWQiCnRhaWwgPSAidGFpbHRhaWx0YWlsIgpmdW5jdGlvbiBkX2dlbihtc2dfdHlwZSwgZGF0YSwgY291bnRlcikKCXJldHVybiBoZWFkIC4uIGRhdGEgLi4gdGFpbAplbmQKCmZ1bmN0aW9uIGRfcGFyc2UoZGF0YSkKICAgICAgICByZXR1cm4gc3RyaW5nLm1hdGNoKGRhdGEsIGhlYWQuLiAiKC4tKSIuLiB0YWlsKQplbmQK",
 		"jc", "5",
 		"jmin", "500",
-		"jmax", "501",
+		"jmax", "1000",
 		"s1", "30",
 		"s2", "40",
 		"h1", "123456",
 		"h2", "67543",
-		"h4", "32345",
 		"h3", "123123",
+		"h4", "32345",
 		"public_key", hex.EncodeToString(pub1[:]),
 		"protocol_version", "1",
 		"replace_allowed_ips", "true",
@@ -274,7 +287,8 @@ func TestTwoDevicePing(t *testing.T) {
 	})
 }
 
-func TestTwoDevicePingASecurity(t *testing.T) {
+// Run test with -race=false to avoid the race for setting the default msgTypes 2 times
+func TestASecurityTwoDevicePing(t *testing.T) {
 	goroutineLeakCheck(t)
 	pair := genTestPair(t, true, true)
 	t.Run("ping 1.0.0.1", func(t *testing.T) {

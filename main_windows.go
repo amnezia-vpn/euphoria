@@ -12,11 +12,11 @@ import (
 
 	"golang.org/x/sys/windows"
 
-	"github.com/amnezia-vpn/amneziawg-go/conn"
-	"github.com/amnezia-vpn/amneziawg-go/device"
-	"github.com/amnezia-vpn/amneziawg-go/ipc"
+	"github.com/amnezia-vpn/euphoria/conn"
+	"github.com/amnezia-vpn/euphoria/device"
+	"github.com/amnezia-vpn/euphoria/ipc"
 
-	"github.com/amnezia-vpn/amneziawg-go/tun"
+	"github.com/amnezia-vpn/euphoria/tun"
 )
 
 const (
@@ -30,13 +30,13 @@ func main() {
 	}
 	interfaceName := os.Args[1]
 
-	fmt.Fprintln(os.Stderr, "Warning: this is a test program for Windows, mainly used for debugging this Go package. For a real AmneziaWG for Windows client, please visit: https://amnezia.org")
+	fmt.Fprintln(os.Stderr, "Warning: this is a test program for Windows, mainly used for debugging this Go package. For a real Euphoria for Windows client, please visit: https://amnezia.org")
 
 	logger := device.NewLogger(
 		device.LogLevelVerbose,
 		fmt.Sprintf("(%s) ", interfaceName),
 	)
-	logger.Verbosef("Starting amneziawg-go version %s", Version)
+	logger.Verbosef("Starting euphoria version %s", Version)
 
 	tun, err := tun.CreateTUN(interfaceName, 0)
 	if err == nil {

@@ -11,12 +11,12 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/amnezia-vpn/amneziawg-go/conn"
-	"github.com/amnezia-vpn/amneziawg-go/device/internal/adapter"
-	"github.com/amnezia-vpn/amneziawg-go/ipc"
-	"github.com/amnezia-vpn/amneziawg-go/ratelimiter"
-	"github.com/amnezia-vpn/amneziawg-go/rwcancel"
-	"github.com/amnezia-vpn/amneziawg-go/tun"
+	"github.com/amnezia-vpn/euphoria/conn"
+	"github.com/amnezia-vpn/euphoria/device/internal/adapter"
+	"github.com/amnezia-vpn/euphoria/ipc"
+	"github.com/amnezia-vpn/euphoria/ratelimiter"
+	"github.com/amnezia-vpn/euphoria/rwcancel"
+	"github.com/amnezia-vpn/euphoria/tun"
 	"github.com/tevino/abool/v2"
 )
 

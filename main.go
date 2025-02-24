@@ -14,10 +14,10 @@ import (
 	"runtime"
 	"strconv"
 
-	"github.com/amnezia-vpn/amneziawg-go/conn"
-	"github.com/amnezia-vpn/amneziawg-go/device"
-	"github.com/amnezia-vpn/amneziawg-go/ipc"
-	"github.com/amnezia-vpn/amneziawg-go/tun"
+	"github.com/amnezia-vpn/euphoria/conn"
+	"github.com/amnezia-vpn/euphoria/device"
+	"github.com/amnezia-vpn/euphoria/ipc"
+	"github.com/amnezia-vpn/euphoria/tun"
 	"golang.org/x/sys/unix"
 )
 
@@ -48,8 +48,8 @@ func warning() {
 
 	fmt.Fprintln(os.Stderr, "┌──────────────────────────────────────────────────────────────┐")
 	fmt.Fprintln(os.Stderr, "│                                                              │")
-	fmt.Fprintln(os.Stderr, "│       Running amneziawg-go is not required because this      │")
-	fmt.Fprintln(os.Stderr, "│       kernel has first class support for AmneziaWG. For      │")
+	fmt.Fprintln(os.Stderr, "│       Running euphoria is not required because this          │")
+	fmt.Fprintln(os.Stderr, "│       kernel has first class support for Euphoria. For       │")
 	fmt.Fprintln(os.Stderr, "│       information on installing the kernel module,           │")
 	fmt.Fprintln(os.Stderr, "│       please visit:                                          │")
 	fmt.Fprintln(os.Stderr, "| https://github.com/amnezia-vpn/amneziawg-linux-kernel-module │")
@@ -60,7 +60,7 @@ func warning() {
 func main() {
 	if len(os.Args) == 2 && os.Args[1] == "--version" {
 		fmt.Printf(
-			"amneziawg-go %s\n\nUserspace AmneziaWG daemon for %s-%s.\nInformation available at https://amnezia.org\n",
+			"euphoria %s\n\nUserspace Euphoria daemon for %s-%s.\nInformation available at https://amnezia.org\n",
 			Version,
 			runtime.GOOS,
 			runtime.GOARCH,
@@ -150,7 +150,7 @@ func main() {
 		fmt.Sprintf("(%s) ", interfaceName),
 	)
 
-	logger.Verbosef("Starting amneziawg-go version %s", Version)
+	logger.Verbosef("Starting euphoria version %s", Version)
 
 	if err != nil {
 		logger.Errorf("Failed to create TUN device: %v", err)

@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/amnezia-vpn/amneziawg-go/conn/bindtest"
-	"github.com/amnezia-vpn/amneziawg-go/tun/tuntest"
+	"github.com/amnezia-vpn/euphoria/conn/bindtest"
+	"github.com/amnezia-vpn/euphoria/tun/tuntest"
 )
 
 func setUpJunkCreator(t *testing.T) (junkCreator, error) {

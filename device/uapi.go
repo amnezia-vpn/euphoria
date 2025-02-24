@@ -18,8 +18,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/amnezia-vpn/amneziawg-go/device/internal/adapter"
-	"github.com/amnezia-vpn/amneziawg-go/ipc"
+	"github.com/amnezia-vpn/euphoria/device/internal/adapter"
+	"github.com/amnezia-vpn/euphoria/ipc"
 )
 
 type IPCError struct {

@@ -1,8 +1,8 @@
-FROM golang:1.24 as awg
+FROM golang:1.24 as euphoria
 
 RUN apt-get update && apt install libluajit-5.1-dev -y
-COPY . /awg
-WORKDIR /awg
+COPY . /euphoria
+WORKDIR /euphoria
 
 RUN go mod download && go mod verify
 
@@ -17,4 +17,4 @@ RUN apk --no-cache add iproute2 iptables bash && \
     chmod +x /usr/bin/awg /usr/bin/awg-quick && \
     ln -s /usr/bin/awg /usr/bin/wg && \
     ln -s /usr/bin/awg-quick /usr/bin/wg-quick
-COPY --from=awg /usr/bin/amneziawg-go /usr/bin/amneziawg-go
+COPY --from=euphoria /usr/bin/euphoria /usr/bin/euphoria

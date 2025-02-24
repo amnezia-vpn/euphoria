@@ -11,15 +11,15 @@ As a result, AmneziaWG maintains high performance while adding an extra layer of
 Simply run:
 
 ```
-$ euphoria wg0
+$ amneziawg-go wg1
 ```
 
-This will create an interface and fork into the background. To remove the interface, use the usual `ip link del wg0`, or if your system does not support removing interfaces directly, you may instead remove the control socket via `rm -f /var/run/euphoria/wg0.sock`, which will result in euphoria shutting down.
+This will create an interface and fork into the background. To remove the interface, use the usual `ip link del wg0`, or if your system does not support removing interfaces directly, you may instead remove the control socket via `rm -f /var/run/amneziawg-go/wg0.sock`, which will result in euphoria shutting down.
 
 To run euphoria without forking to the background, pass `-f` or `--foreground`:
 
 ```
-$ euphoria -f wg0
+$ amneziawg-go -f wg0
 ```
 When an interface is running, you may use [`euphoria-tools`](https://github.com/amnezia-vpn/euphoria-tools) to configure it, as well as the usual `ip(8)` and `ifconfig(8)` commands.
 

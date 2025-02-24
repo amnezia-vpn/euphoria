@@ -14,18 +14,18 @@ generate-version-and-build:
 	[ "$$(cat version.go 2>/dev/null)" != "$$ver" ] && \
 	echo "$$ver" > version.go && \
 	git update-index --assume-unchanged version.go || true
-	@$(MAKE) euphoria
+	@$(MAKE) amneziawg-go
 
-euphoria: $(wildcard *.go) $(wildcard */*.go)
+amneziawg-go: $(wildcard *.go) $(wildcard */*.go)
 	go build -tags luajit -ldflags="-w -s" -trimpath -v -o "$@"
 
-install: euphoria
-	@install -v -d "$(DESTDIR)$(BINDIR)" && install -v -m 0755 "$<" "$(DESTDIR)$(BINDIR)/euphoria"
+install: amneziawg-go
+	@install -v -d "$(DESTDIR)$(BINDIR)" && install -v -m 0755 "$<" "$(DESTDIR)$(BINDIR)/amneziawg-go"
 
 test:
 	go test ./...
 
 clean:
-	rm -f euphoria
+	rm -f amneziawg-go
 
 .PHONY: all clean test install generate-version-and-build

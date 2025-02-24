@@ -98,8 +98,8 @@ func (device *Device) IpcGetOperation(w io.Writer) error {
 			sendf("fwmark=%d", device.net.fwmark)
 		}
 
-		if device.awg.codec != nil {
-			sendf("lua_codec=%s", device.awg.codec.Base64LuaCode())
+		if device.awg.codec.adapter != nil {
+			sendf("lua_codec=%s", device.awg.codec.adapter.Base64LuaCode())
 		}
 		if device.isAdvancedSecurityOn() {
 			if device.awg.aSecCfg.junkPacketCount != 0 {
@@ -184,13 +184,13 @@ func (device *Device) IpcSetOperation(r io.Reader) (err error) {
 	peer := new(ipcSetPeer)
 	deviceConfig := true
 
-	tempAwgTpe := awgType{}
+	tempAwgType := awgType{}
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
 		line := scanner.Text()
 		if line == "" {
 			// Blank line means terminate operation.
-			err := device.handlePostConfig(&tempAwgTpe)
+			err := device.handlePostConfig(&tempAwgType)
 			if err != nil {
 				return err
 			}
@@ -221,7 +221,7 @@ func (device *Device) IpcSetOperation(r io.Reader) (err error) {
 
 		var err error
 		if deviceConfig {
-			err = device.handleDeviceLine(key, value, &tempAwgTpe)
+			err = device.handleDeviceLine(key, value, &tempAwgType)
 		} else {
 			err = device.handlePeerLine(peer, key, value)
 		}
@@ -229,7 +229,7 @@ func (device *Device) IpcSetOperation(r io.Reader) (err error) {
 			return err
 		}
 	}
-	err = device.handlePostConfig(&tempAwgTpe)
+	err = device.handlePostConfig(&tempAwgType)
 	if err != nil {
 		return err
 	}
@@ -241,7 +241,7 @@ func (device *Device) IpcSetOperation(r io.Reader) (err error) {
 	return nil
 }
 
-func (device *Device) handleDeviceLine(key, value string, tempAwgTpe *awgType) error {
+func (device *Device) handleDeviceLine(key, value string, tempAwgType *awgType) error {
 	switch key {
 	case "private_key":
 		var sk NoisePrivateKey
@@ -289,21 +289,24 @@ func (device *Device) handleDeviceLine(key, value string, tempAwgTpe *awgType) e
 
 	case "lua_codec":
 		device.log.Verbosef("UAPI: Updating lua_codec")
-		var err error
-		tempAwgTpe.codec, err = adapter.NewLua(adapter.LuaParams{
-			Base64LuaCode: value,
-		})
-		if err != nil {
-			return ipcErrorf(ipc.IpcErrorInvalid, "invalid lua_codec: %w", err)
+		if len(value) != 0 {
+			var err error
+			tempAwgType.codec.adapter, err = adapter.NewLua(adapter.LuaParams{
+				Base64LuaCode: value,
+			})
+			if err != nil {
+				return ipcErrorf(ipc.IpcErrorInvalid, "invalid lua_codec: %w", err)
+			}
 		}
+		tempAwgType.codec.isOn = true
 	case "jc":
 		junkPacketCount, err := strconv.Atoi(value)
 		if err != nil {
 			return ipcErrorf(ipc.IpcErrorInvalid, "faield to parse junk_packet_count %w", err)
 		}
 		device.log.Verbosef("UAPI: Updating junk_packet_count")
-		tempAwgTpe.aSecCfg.junkPacketCount = junkPacketCount
-		tempAwgTpe.aSecCfg.isSet = true
+		tempAwgType.aSecCfg.junkPacketCount = junkPacketCount
+		tempAwgType.aSecCfg.isSet = true
 
 	case "jmin":
 		junkPacketMinSize, err := strconv.Atoi(value)
@@ -311,8 +314,8 @@ func (device *Device) handleDeviceLine(key, value string, tempAwgTpe *awgType) e
 			return ipcErrorf(ipc.IpcErrorInvalid, "faield to parse junk_packet_min_size %w", err)
 		}
 		device.log.Verbosef("UAPI: Updating junk_packet_min_size")
-		tempAwgTpe.aSecCfg.junkPacketMinSize = junkPacketMinSize
-		tempAwgTpe.aSecCfg.isSet = true
+		tempAwgType.aSecCfg.junkPacketMinSize = junkPacketMinSize
+		tempAwgType.aSecCfg.isSet = true
 
 	case "jmax":
 		junkPacketMaxSize, err := strconv.Atoi(value)
@@ -320,8 +323,8 @@ func (device *Device) handleDeviceLine(key, value string, tempAwgTpe *awgType) e
 			return ipcErrorf(ipc.IpcErrorInvalid, "faield to parse junk_packet_max_size %w", err)
 		}
 		device.log.Verbosef("UAPI: Updating junk_packet_max_size")
-		tempAwgTpe.aSecCfg.junkPacketMaxSize = junkPacketMaxSize
-		tempAwgTpe.aSecCfg.isSet = true
+		tempAwgType.aSecCfg.junkPacketMaxSize = junkPacketMaxSize
+		tempAwgType.aSecCfg.isSet = true
 
 	case "s1":
 		initPacketJunkSize, err := strconv.Atoi(value)
@@ -329,8 +332,8 @@ func (device *Device) handleDeviceLine(key, value string, tempAwgTpe *awgType) e
 			return ipcErrorf(ipc.IpcErrorInvalid, "faield to parse init_packet_junk_size %w", err)
 		}
 		device.log.Verbosef("UAPI: Updating init_packet_junk_size")
-		tempAwgTpe.aSecCfg.initPacketJunkSize = initPacketJunkSize
-		tempAwgTpe.aSecCfg.isSet = true
+		tempAwgType.aSecCfg.initPacketJunkSize = initPacketJunkSize
+		tempAwgType.aSecCfg.isSet = true
 
 	case "s2":
 		responsePacketJunkSize, err := strconv.Atoi(value)
@@ -338,40 +341,40 @@ func (device *Device) handleDeviceLine(key, value string, tempAwgTpe *awgType) e
 			return ipcErrorf(ipc.IpcErrorInvalid, "faield to parse response_packet_junk_size %w", err)
 		}
 		device.log.Verbosef("UAPI: Updating response_packet_junk_size")
-		tempAwgTpe.aSecCfg.responsePacketJunkSize = responsePacketJunkSize
-		tempAwgTpe.aSecCfg.isSet = true
+		tempAwgType.aSecCfg.responsePacketJunkSize = responsePacketJunkSize
+		tempAwgType.aSecCfg.isSet = true
 
 	case "h1":
 		initPacketMagicHeader, err := strconv.ParseUint(value, 10, 32)
 		if err != nil {
 			return ipcErrorf(ipc.IpcErrorInvalid, "faield to parse init_packet_magic_header %w", err)
 		}
-		tempAwgTpe.aSecCfg.initPacketMagicHeader = uint32(initPacketMagicHeader)
-		tempAwgTpe.aSecCfg.isSet = true
+		tempAwgType.aSecCfg.initPacketMagicHeader = uint32(initPacketMagicHeader)
+		tempAwgType.aSecCfg.isSet = true
 
 	case "h2":
 		responsePacketMagicHeader, err := strconv.ParseUint(value, 10, 32)
 		if err != nil {
 			return ipcErrorf(ipc.IpcErrorInvalid, "faield to parse response_packet_magic_header %w", err)
 		}
-		tempAwgTpe.aSecCfg.responsePacketMagicHeader = uint32(responsePacketMagicHeader)
-		tempAwgTpe.aSecCfg.isSet = true
+		tempAwgType.aSecCfg.responsePacketMagicHeader = uint32(responsePacketMagicHeader)
+		tempAwgType.aSecCfg.isSet = true
 
 	case "h3":
 		underloadPacketMagicHeader, err := strconv.ParseUint(value, 10, 32)
 		if err != nil {
 			return ipcErrorf(ipc.IpcErrorInvalid, "faield to parse underload_packet_magic_header %w", err)
 		}
-		tempAwgTpe.aSecCfg.underloadPacketMagicHeader = uint32(underloadPacketMagicHeader)
-		tempAwgTpe.aSecCfg.isSet = true
+		tempAwgType.aSecCfg.underloadPacketMagicHeader = uint32(underloadPacketMagicHeader)
+		tempAwgType.aSecCfg.isSet = true
 
 	case "h4":
 		transportPacketMagicHeader, err := strconv.ParseUint(value, 10, 32)
 		if err != nil {
 			return ipcErrorf(ipc.IpcErrorInvalid, "faield to parse transport_packet_magic_header %w", err)
 		}
-		tempAwgTpe.aSecCfg.transportPacketMagicHeader = uint32(transportPacketMagicHeader)
-		tempAwgTpe.aSecCfg.isSet = true
+		tempAwgType.aSecCfg.transportPacketMagicHeader = uint32(transportPacketMagicHeader)
+		tempAwgType.aSecCfg.isSet = true
 
 	default:
 		return ipcErrorf(ipc.IpcErrorInvalid, "invalid UAPI device key: %v", key)

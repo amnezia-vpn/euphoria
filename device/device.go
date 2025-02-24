@@ -102,7 +102,10 @@ type awgType struct {
 	aSecCfg     aSecCfgType
 	junkCreator junkCreator
 
-	codec 	  *adapter.Lua
+	codec struct {
+		adapter *adapter.Lua
+		isOn  bool
+	}
 }
 
 type aSecCfgType struct {
@@ -434,9 +437,9 @@ func (device *Device) Close() {
 
 	device.resetProtocol()
 
-	if device.awg.codec != nil {
-		device.awg.codec.Close()
-		device.awg.codec = nil
+	if device.awg.codec.adapter != nil {
+		device.awg.codec.adapter.Close()
+		device.awg.codec.adapter = nil
 	}
 	device.log.Verbosef("Device closed")
 	close(device.closed)
@@ -596,7 +599,10 @@ func (device *Device) resetProtocol() {
 }
 
 func (device *Device) handlePostConfig(tempAwgType *awgType) (err error) {
-	device.awg.codec = tempAwgType.codec
+	if tempAwgType.codec.isOn {
+		device.awg.codec.adapter = tempAwgType.codec.adapter
+		device.awg.codec.isOn = tempAwgType.codec.adapter != nil
+	}
 
 	if !tempAwgType.aSecCfg.isSet {
 		return nil
@@ -836,13 +842,13 @@ func (device *Device) handlePostConfig(tempAwgType *awgType) (err error) {
 }
 
 func (device *Device) isCodecActive() bool {
-	return device.awg.codec != nil
+	return device.awg.codec.adapter != nil
 }
 
 func (device *Device) codecPacketIfActive(msgType uint32, packet []byte) ([]byte, error) {
 	if device.isCodecActive() {
 		var err error
-			packet, err = device.awg.codec.Generate(int64(msgType),packet)
+			packet, err = device.awg.codec.adapter.Generate(int64(msgType),packet)
 		if err != nil {
 			device.log.Errorf("%v - Failed to run codec generate: %v", device, err)
 			return nil, err

@@ -138,10 +138,7 @@ func (device *Device) RoutineReceiveIncoming(
 
 			packet := bufsArrs[i][:size]
 			if device.isCodecActive() {
-				realPacket, err := device.awg.codec.Parse(packet)
-				copy(packet, realPacket)
-				size = len(realPacket)
-				packet = bufsArrs[i][:size]
+				realPacket, err := device.awg.codec.adapter.Parse(packet)
 				if err != nil {
 					device.log.Verbosef(
 						"Couldn't parse message; reason: %v",
@@ -149,6 +146,9 @@ func (device *Device) RoutineReceiveIncoming(
 					)
 					continue
 				}
+				copy(packet, realPacket)
+				size = len(realPacket)
+				packet = bufsArrs[i][:size]
 			}
 			var msgType uint32
 			if device.isAdvancedSecurityOn() {
@@ -166,7 +166,7 @@ func (device *Device) RoutineReceiveIncoming(
 				} else {
 					msgType = binary.LittleEndian.Uint32(packet[:4])
 					if msgType != MessageTransportType {
-						device.log.Verbosef("ASec: Received message with unknown type")
+						device.log.Verbosef("ASec: Received message with unknown type: %d", msgType)
 						continue
 					}
 				}

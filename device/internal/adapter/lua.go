@@ -3,15 +3,16 @@ package adapter
 import (
 	"encoding/base64"
 	"fmt"
-	"sync/atomic"
+	"sync"
 
 	"github.com/aarzilli/golua/lua"
 )
 
 type Lua struct {
 	generateState *lua.State
+	mux           sync.Mutex
 	parseState    *lua.State
-	packetCounter atomic.Int64
+	packetCnt     int64
 	base64LuaCode string
 }
 
@@ -58,19 +59,26 @@ func (l *Lua) Close() {
 	l.parseState.Close()
 }
 
-// Only thread safe if used by wg packet creation which happens independably
 func (l *Lua) Generate(
 	msgType int64,
 	data []byte,
 ) ([]byte, error) {
+	l.mux.Lock()
+	defer l.mux.Unlock()
+
 	l.generateState.GetGlobal("d_gen")
 
 	l.generateState.PushInteger(msgType)
 	l.generateState.PushBytes(data)
-	l.generateState.PushInteger(l.packetCounter.Add(1))
+	l.generateState.PushInteger(l.packetCnt)
+	l.packetCnt++
 
 	if err := l.generateState.Call(3, 1); err != nil {
-		return nil, fmt.Errorf("Error calling Lua function: %v\n", err)
+		return nil, fmt.Errorf(
+			"Error calling Lua function: %v\ntrace: %v",
+			err,
+			l.generateState.StackTrace(),
+		)
 	}
 
 	result := l.generateState.ToBytes(-1)
@@ -84,6 +92,7 @@ func (l *Lua) Parse(data []byte) ([]byte, error) {
 	l.parseState.GetGlobal("d_parse")
 
 	l.parseState.PushBytes(data)
+
 	if err := l.parseState.Call(1, 1); err != nil {
 		return nil, fmt.Errorf("Error calling Lua function: %v\n", err)
 	}

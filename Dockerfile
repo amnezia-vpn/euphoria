@@ -17,4 +17,4 @@ RUN apk --no-cache add iproute2 iptables bash && \
     chmod +x /usr/bin/awg /usr/bin/awg-quick && \
     ln -s /usr/bin/awg /usr/bin/wg && \
     ln -s /usr/bin/awg-quick /usr/bin/wg-quick
-COPY --from=euphoria /usr/bin/euphoria /usr/bin/euphoria
+COPY --from=euphoria /usr/bin/euphoria /usr/bin/amneziawg-go
